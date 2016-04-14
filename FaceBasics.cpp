@@ -4,10 +4,13 @@
 // </copyright>
 //------------------------------------------------------------------------------
 
+#include "vJoyConnect.h"
 #include "stdafx.h"
 #include <strsafe.h>
 #include "resource.h"
 #include "FaceBasics.h"
+
+
 
 // face property text layout offset in X axis
 static const float c_FaceTextLayoutOffsetX = -0.1f;
@@ -244,7 +247,8 @@ LRESULT CALLBACK CFaceBasics::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
             {
                 SetStatusMessage(L"Failed to initialize the Direct2D draw device.", 10000, true);
             }
-
+			
+			setup_vJoy();
             // Get and initialize the default Kinect sensor
             InitializeDefaultSensor();
         }
@@ -316,16 +320,31 @@ HRESULT CFaceBasics::InitializeDefaultSensor()
             // create a face frame source + reader to track each body in the fov
             for (int i = 0; i < BODY_COUNT; i++)
             {
-                if (SUCCEEDED(hr))
-                {
-                    // create the face frame source by specifying the required face frame features
-                    hr = CreateFaceFrameSource(m_pKinectSensor, 0, c_FaceFrameFeatures, &m_pFaceFrameSources[i]);
-                }
-                if (SUCCEEDED(hr))
-                {
-                    // open the corresponding reader
-                    hr = m_pFaceFrameSources[i]->OpenReader(&m_pFaceFrameReaders[i]);
-                }				
+                //if (SUCCEEDED(hr))
+                //{
+                //    // create the face frame source by specifying the required face frame features
+                //    hr = CreateFaceFrameSource(m_pKinectSensor, 0, c_FaceFrameFeatures, &m_pFaceFrameSources[i]);
+                //}
+                //if (SUCCEEDED(hr))
+                //{
+                //    // open the corresponding reader
+                //    hr = m_pFaceFrameSources[i]->OpenReader(&m_pFaceFrameReaders[i]);
+                //}
+
+				// create the face frame source by specifying the required face frame features
+				hr = CreateFaceFrameSource(m_pKinectSensor, 0, c_FaceFrameFeatures, &m_pFaceFrameSources[i]);
+				if (FAILED(hr))
+				{
+					//printf("Error : CreateFaceFrameSource %d.\n", i);
+					//SetStatusMessage(L"Error : CreateFaceFrameSource.", 10000, true);
+				}
+				// open the corresponding reader
+				hr = m_pFaceFrameSources[i]->OpenReader(&m_pFaceFrameReaders[i]);
+				if (FAILED(hr))
+				{
+					//printf("Error : OpenReader(%d).\n", i);
+					//SetStatusMessage(L"Error : OpenReader.", 10000, true);
+				}
             }
         }        
 

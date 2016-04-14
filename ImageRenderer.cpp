@@ -7,6 +7,7 @@
 #include "stdafx.h"
 #include <string>
 #include "ImageRenderer.h"
+#include "vJoyConnect.h"
 
 using namespace DirectX;
 
@@ -359,6 +360,8 @@ void ImageRenderer::DrawFaceFrameResults(int iFace, const RectI* pFaceBox, const
         faceText += L"FaceYaw : " + std::to_wstring(yaw) + L"\n";
         faceText += L"FacePitch : " + std::to_wstring(pitch) + L"\n";
         faceText += L"FaceRoll : " + std::to_wstring(roll) + L"\n";
+
+		update_vJoy(roll, pitch, yaw);
 
         D2D1_RECT_F layoutRect = D2D1::RectF(pFaceTextLayout->x, pFaceTextLayout->y, 
             pFaceTextLayout->x + c_TextLayoutWidth, 
