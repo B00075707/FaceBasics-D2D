@@ -103,6 +103,8 @@ private:
     /// <returns>success or failure</returns>
     bool                   SetStatusMessage(_In_z_ WCHAR* szMessage, ULONGLONG nShowTimeMsec, bool bForce);
 
+	inline void ExtractFaceRotationInDegrees(const Vector4* pQuaternion, int* pPitch, int* pYaw, int* pRoll);
+
     HWND                   m_hWnd;
     INT64                  m_nStartTime;
     INT64                  m_nLastCounter;

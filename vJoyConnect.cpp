@@ -78,14 +78,33 @@ int update_vJoy(int roll, int pitch, int yaw)
 		// Set position data of 3 first axes
 		/*if (Z>35000) Z = 0;
 		Z += 200;*/
-		iReport.wAxisZ = roll * 1000;
-		iReport.wAxisX = pitch * 1000;
-		iReport.wAxisY = yaw * 1000;
+		/*iReport.wAxisZ = roll * 1000;
+		iReport.wAxisX = yaw * 1000;
+		iReport.wAxisY = pitch * 1000;*/
+
+		long scaled_roll = (long)((roll * 17500 / 35) + 17500);
+		long scaled_yaw = (long)((yaw * -17500 / 45) + 17500);
+		long scaled_pitch = (long)((pitch * 17500 / 25) + 17500);
+
+		iReport.wAxisZ = scaled_roll;
+		iReport.wAxisX = scaled_yaw;
+		iReport.wAxisY = scaled_pitch;
 
 		// Set position data of first 8 buttons
 		//Btns = 1 << (Z / 4000);
 		//iReport.lButtons = Btns;
-		iReport.lButtons = 1;
+		//iReport.lButtons = 1;
+
+		if (pitch > 5)
+		{
+			iReport.lButtons = 1;
+		}
+		else if (pitch < -5)
+		{
+			iReport.lButtons = 4;
+		}
+		else
+			iReport.lButtons = 0;
 
 		// Send position data to vJoy device
 		pPositionMessage = (PVOID)(&iReport);

@@ -10,7 +10,7 @@
 #include "resource.h"
 #include "FaceBasics.h"
 
-
+#define CUSTOM_BODY_COUNT 6
 
 // face property text layout offset in X axis
 static const float c_FaceTextLayoutOffsetX = -0.1f;
@@ -73,7 +73,7 @@ CFaceBasics::CFaceBasics() :
         m_fFreq = double(qpf.QuadPart);
     }
 
-    for (int i = 0; i < BODY_COUNT; i++)
+    for (int i = 0; i < CUSTOM_BODY_COUNT; i++)
     {
         m_pFaceFrameSources[i] = nullptr;
         m_pFaceFrameReaders[i] = nullptr;
@@ -106,7 +106,7 @@ CFaceBasics::~CFaceBasics()
     SafeRelease(m_pD2DFactory);
 
     // done with face sources and readers
-    for (int i = 0; i < BODY_COUNT; i++)
+    for (int i = 0; i < CUSTOM_BODY_COUNT; i++)
     {
         SafeRelease(m_pFaceFrameSources[i]);
         SafeRelease(m_pFaceFrameReaders[i]);		
@@ -318,7 +318,7 @@ HRESULT CFaceBasics::InitializeDefaultSensor()
         if (SUCCEEDED(hr))
         {
             // create a face frame source + reader to track each body in the fov
-            for (int i = 0; i < BODY_COUNT; i++)
+            for (int i = 0; i < CUSTOM_BODY_COUNT; i++)
             {
                 //if (SUCCEEDED(hr))
                 //{
@@ -455,7 +455,7 @@ void CFaceBasics::DrawStreams(INT64 nTime, RGBQUAD* pBuffer, int nWidth, int nHe
             if (pBuffer && (nWidth == cColorWidth) && (nHeight == cColorHeight))
             {
                 // Draw the data with Direct2D
-                hr = m_pDrawDataStreams->DrawBackground(reinterpret_cast<BYTE*>(pBuffer), cColorWidth * cColorHeight * sizeof(RGBQUAD));        
+                //hr = m_pDrawDataStreams->DrawBackground(reinterpret_cast<BYTE*>(pBuffer), cColorWidth * cColorHeight * sizeof(RGBQUAD));        
             }
             else
             {
@@ -509,11 +509,11 @@ void CFaceBasics::DrawStreams(INT64 nTime, RGBQUAD* pBuffer, int nWidth, int nHe
 void CFaceBasics::ProcessFaces()
 {
     HRESULT hr;
-    IBody* ppBodies[BODY_COUNT] = {0};
+    IBody* ppBodies[CUSTOM_BODY_COUNT] = {0};
     bool bHaveBodyData = SUCCEEDED( UpdateBodyData(ppBodies) );
 
     // iterate through each face reader
-    for (int iFace = 0; iFace < BODY_COUNT; ++iFace)
+    for (int iFace = 0; iFace < CUSTOM_BODY_COUNT; ++iFace)
     {
         // retrieve the latest face frame from this reader
         IFaceFrame* pFaceFrame = nullptr;
@@ -567,7 +567,10 @@ void CFaceBasics::ProcessFaces()
                     if (SUCCEEDED(hr))
                     {
                         // draw face frame results
-                        m_pDrawDataStreams->DrawFaceFrameResults(iFace, &faceBox, facePoints, &faceRotation, faceProperties, &faceTextLayout);
+                        //m_pDrawDataStreams->DrawFaceFrameResults(iFace, &faceBox, facePoints, &faceRotation, faceProperties, &faceTextLayout);
+						int pitch, yaw, roll;
+						ExtractFaceRotationInDegrees(&faceRotation, &pitch, &yaw, &roll);
+						update_vJoy(roll, pitch, yaw);
                     }							
                 }
 
@@ -675,7 +678,7 @@ HRESULT CFaceBasics::UpdateBodyData(IBody** ppBodies)
         hr = m_pBodyFrameReader->AcquireLatestFrame(&pBodyFrame);
         if (SUCCEEDED(hr))
         {
-            hr = pBodyFrame->GetAndRefreshBodyData(BODY_COUNT, ppBodies);
+            hr = pBodyFrame->GetAndRefreshBodyData(CUSTOM_BODY_COUNT, ppBodies);
         }
         SafeRelease(pBodyFrame);    
     }
@@ -705,3 +708,17 @@ bool CFaceBasics::SetStatusMessage(_In_z_ WCHAR* szMessage, ULONGLONG nShowTimeM
     return false;
 }
 
+// Quote from Kinect for Windows SDK v2.0 Developer Preview - Samples/Native/FaceBasics-D2D, and Partial Modification
+// ExtractFaceRotationInDegrees is: Copyright (c) Microsoft Corporation. All rights reserved.
+inline void CFaceBasics::ExtractFaceRotationInDegrees(const Vector4* pQuaternion, int* pPitch, int* pYaw, int* pRoll)
+{
+	double x = pQuaternion->x;
+	double y = pQuaternion->y;
+	double z = pQuaternion->z;
+	double w = pQuaternion->w;
+
+	// convert face rotation quaternion to Euler angles in degrees
+	*pPitch = static_cast<int>(std::atan2(2 * (y * z + w * x), w * w - x * x - y * y + z * z) / M_PI * 180.0f);
+	*pYaw = static_cast<int>(std::asin(2 * (w * y - x * z)) / M_PI * 180.0f);
+	*pRoll = static_cast<int>(std::atan2(2 * (x * y + w * z), w * w + x * x - y * y - z * z) / M_PI * 180.0f);
+}
